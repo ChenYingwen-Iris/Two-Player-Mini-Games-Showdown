@@ -67,7 +67,6 @@ class Game:
         self.screen = screen
         self.width = width
         self.height = height
-        self.ai_enabled = ai
 
         # try common filename variants for the menu background
         bg_candidates = ["homepage bg.jpg", "homepage-bg.jpg", "homepage_bg.jpg", "homepage.jpg"]
@@ -79,10 +78,26 @@ class Game:
                 print(f"[debug] menu background loaded: {name}")
                 break
         if self.menu_bg:
+            # scale the menu background to FIT the window while preserving aspect ratio
+            # (no cropping; image is centered and letterboxed/pillarboxed if needed)
             try:
-                self.menu_bg = pygame.transform.smoothscale(self.menu_bg, (self.width, self.height))
+                iw, ih = self.menu_bg.get_size()
+                scale = min(self.width / iw, self.height / ih)
+                new_w = max(1, int(iw * scale))
+                new_h = max(1, int(ih * scale))
+                self.menu_bg_scaled = pygame.transform.smoothscale(self.menu_bg, (new_w, new_h))
             except Exception:
-                self.menu_bg = pygame.transform.scale(self.menu_bg, (self.width, self.height))
+                try:
+                    iw, ih = self.menu_bg.get_size()
+                    scale = min(self.width / iw, self.height / ih)
+                    new_w = max(1, int(iw * scale))
+                    new_h = max(1, int(ih * scale))
+                    self.menu_bg_scaled = pygame.transform.scale(self.menu_bg, (new_w, new_h))
+                except Exception:
+                    # fallback: use original surface (should still be safe)
+                    self.menu_bg_scaled = self.menu_bg.copy()
+            # center the scaled background in the window
+            self.menu_bg_rect = self.menu_bg_scaled.get_rect(center=(self.width // 2, self.height // 2))
         else:
             print("[debug] menu background not found; checked:", bg_candidates)
 
@@ -395,47 +410,45 @@ class Game:
             self.state = "waiting"
 
     def draw_menu(self):
-        if getattr(self, "menu_bg", None):
-            self.screen.blit(self.menu_bg, (0, 0))
+        # blit a centered, aspect-correct menu background if available
+        if getattr(self, "menu_bg_scaled", None):
+            # use the precomputed rect so image is centered and not cropped
+            try:
+                self.screen.blit(self.menu_bg_scaled, self.menu_bg_rect)
+            except Exception:
+                # fallback to filling if anything goes wrong
+                self.screen.fill((20, 30, 40))
         else:
             self.screen.fill((20, 30, 40))
 
         # ...existing menu title / logo drawing code ...
 
-        # Draw the 1P / 2P labels (replace with flicker-aware blit)
-        t1 = "Press 1 for 1P"
-        t2 = "Press 2 for 2P"
-        s1 = self.menu_small_font.render(t1, True, (255, 255, 255))
+        # Draw the start label (replace with flicker-aware blit)
+        t2 = "Press Enter to Start"  # Changed from "Press 2 for 2P"
         s2 = self.menu_small_font.render(t2, True, (255, 255, 255))
 
-        spacing = 40
-        total_w = s1.get_width() + spacing + s2.get_width()
-        left_shift = 15
-        start_x = (self.width - total_w) // 2 - left_shift
-        start_x = max(10, start_x)
+        # Center the label horizontally (clamped within window with 10px padding)
+        total_w = s2.get_width()
+        start_x = (self.width - total_w) // 2
+        start_x = max(10, min(start_x, self.width - total_w - 10))
         bottom_margin = 20
-        y = self.height - bottom_margin - s1.get_height()
+        y = self.height - bottom_margin - s2.get_height()
 
-        # Blit the 1P / 2P labels (replace with flicker-aware blit)
-        s2_x = start_x + s1.get_width() + spacing
+        # Blit the label (replace with flicker-aware blit)
+        s2_x = start_x
 
-        # determine flicker visibility (guarded so missing attrs won't crash)
+        # Determine flicker visibility (guarded so missing attrs won't crash)
         mf_timer = getattr(self, "menu_flicker_timer", 0)
         mf_rate = getattr(self, "menu_flicker_rate", 4) or 4
         mf_choice = getattr(self, "menu_selected_choice", None)
 
-        # default visible
-        vis1 = True
+        # Default visible
         vis2 = True
 
-        # if flicker active for a choice, toggle visibility every mf_rate frames
-        if mf_timer > 0 and mf_choice == '1':
-            vis1 = ((mf_timer // mf_rate) % 2) == 0
-        if mf_timer > 0 and mf_choice == '2':
+        # If flicker active for start choice, toggle visibility every mf_rate frames
+        if mf_timer > 0 and mf_choice == 'enter':  # Changed from '2'
             vis2 = ((mf_timer // mf_rate) % 2) == 0
 
-        if vis1:
-            self.screen.blit(s1, (start_x, y))
         if vis2:
             self.screen.blit(s2, (s2_x, y))
 
@@ -479,13 +492,18 @@ class Game:
         overlay.fill((0,0,0,160))
         self.screen.blit(overlay, (0,0))
 
-        text = f"{self.winner} wins!"
-        txt_surf = self.font.render(text, True, (255,255,255))
+        # use Determination font if available, fall back to existing fonts
+        title_font = getattr(self, "menu_font", None) or getattr(self, "font", None)
+        hint_font = getattr(self, "menu_small_font", None) or getattr(self, "small_font", None)
+
+        # ensure winner text is ALL CAPS
+        text = f"{self.winner} wins!".upper()
+        txt_surf = title_font.render(text, True, (255,255,255))
         rect = txt_surf.get_rect(center=(self.width//2, self.height//2 - 20))
         self.screen.blit(txt_surf, rect)
 
         hint = "Press R to restart or Esc to quit"
-        hint_surf = self.small_font.render(hint, True, (200,200,200))
+        hint_surf = hint_font.render(hint, True, (200,200,200))
         hint_rect = hint_surf.get_rect(center=(self.width//2, self.height//2 + 40))
         self.screen.blit(hint_surf, hint_rect)
 
@@ -576,14 +594,19 @@ class Game:
 
                     if self.state == "waiting":
                         # CHANGED: start flicker + sound, delay actual start until flicker finishes
-                        if event.key == pygame.K_1:
-                            # begin single-player selection flicker
-                            self.menu_selected_choice = '1'
-                            self.menu_flicker_timer = self.menu_flicker_duration
-                            self._maybe_play_select_sound()
-                        elif event.key == pygame.K_2:
+                        # if event.key == pygame.K_1:
+                        #     # begin single-player selection flicker
+                        #     self.menu_selected_choice = '1'
+                        #     self.menu_flicker_timer = self.menu_flicker_duration
+                        #     self._maybe_play_select_sound()
+                        if event.key == pygame.K_2:
                             # begin two-player selection flicker
                             self.menu_selected_choice = '2'
+                            self.menu_flicker_timer = self.menu_flicker_duration
+                            self._maybe_play_select_sound()
+                        elif event.key == pygame.K_RETURN:  # Changed from K_2
+                            # begin start selection flicker
+                            self.menu_selected_choice = 'enter'  # Changed from '2'
                             self.menu_flicker_timer = self.menu_flicker_duration
                             self._maybe_play_select_sound()
                         elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
@@ -648,10 +671,7 @@ class Game:
                 self.menu_flicker_timer -= 1
                 # when timer reaches zero, finalize choice and start game
                 if self.menu_flicker_timer == 0 and self.menu_selected_choice is not None:
-                    if self.menu_selected_choice == '1':
-                        self.ai_enabled = True
-                    else:
-                        self.ai_enabled = False
+                    self.ai_enabled = False  # Always disable AI for 2-player
                     # clear selection state and actually start the game
                     self.menu_selected_choice = None
                     self.start()
