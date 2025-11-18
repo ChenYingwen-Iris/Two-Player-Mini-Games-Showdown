@@ -33,47 +33,64 @@ def load_image(path, scale=1):
             img = pygame.transform.scale(img, new_size)
         return img
     except FileNotFoundError:
-        print(f"Error: Image resource not found - {path}")
-        sys.exit(1)
+        # Don't exit immediately, let caller handle it
+        raise
+
+def load_image_with_fallback(relative_path, scale=1):
+    """Try loading image from relative path first, then with full path"""
+    try:
+        # Try relative path first (when running from pixel-coin-collectors directory)
+        return load_image(relative_path, scale)
+    except:
+        try:
+            # Try with full path (when running from parent directory)
+            full_path = f"pixel-coin-collectors/{relative_path}"
+            return load_image(full_path, scale)
+        except Exception as e:
+            print(f"Error: Could not load image from {relative_path} or pixel-coin-collectors/{relative_path}")
+            raise
 
 # Load background and scale to screen size so it fits the window
 try:
-    bg = load_image("pixel-coin-collectors/assets/images/starry_sky.png")
-    if isinstance(bg, pygame.Surface):
-        bg = pygame.transform.scale(bg, (WIDTH, HEIGHT))
-    else:
-        bg = pygame.Surface((WIDTH, HEIGHT))
-        bg.fill(BLACK)
-except Exception:
+    bg = load_image_with_fallback("assets/images/starry_sky.png")
+    bg = pygame.transform.scale(bg, (WIDTH, HEIGHT))
+except Exception as e:
+    print(f"Warning: Could not load background image: {e}")
     bg = pygame.Surface((WIDTH, HEIGHT))
     bg.fill(BLACK)
 
 # 玩家1的三个方向帧
 player1_frames = {
-    "front": load_image("pixel-coin-collectors/assets/images/player1/front.png", 0.5),  # 正面静止
-    "left": load_image("pixel-coin-collectors/assets/images/player1/left.png", 0.5),    # 向左
-    "right": load_image("pixel-coin-collectors/assets/images/player1/right.png", 0.5)   # 向右
+    "front": load_image_with_fallback("assets/images/player1/front.png", 0.5),  # 正面静止
+    "left": load_image_with_fallback("assets/images/player1/left.png", 0.5),    # 向左
+    "right": load_image_with_fallback("assets/images/player1/right.png", 0.5)   # 向右
 }
 
 # 玩家2的三个方向帧
 player2_frames = {
-    "front": load_image("pixel-coin-collectors/assets/images/player2/front.png", 0.5),  # 正面静止
-    "left": load_image("pixel-coin-collectors/assets/images/player2/left.png", 0.5),    # 向左
-    "right": load_image("pixel-coin-collectors/assets/images/player2/right.png", 0.5)   # 向右
+    "front": load_image_with_fallback("assets/images/player2/front.png", 0.5),  # 正面静止
+    "left": load_image_with_fallback("assets/images/player2/left.png", 0.5),    # 向左
+    "right": load_image_with_fallback("assets/images/player2/right.png", 0.5)   # 向右
 }
 
 # 金币图片 — 缩小比例以便在游戏中合适显示（保持较小）
-coin_img = load_image("pixel-coin-collectors/assets/images/coin.png", 0.02)
+coin_img = load_image_with_fallback("assets/images/coin.png", 0.02)
 
 # 新增：钻石和炸弹图片（比金币更大）
 # 增大图片缩放比例 so diamonds/bombs appear larger than coins
-diamond_img = load_image("pixel-coin-collectors/assets/images/diamond.png", 0.06)
-bomb_img = load_image("pixel-coin-collectors/assets/images/bomb.png", 0.05)  # slightly smaller than before
+diamond_img = load_image_with_fallback("assets/images/diamond.png", 0.06)
+bomb_img = load_image_with_fallback("assets/images/bomb.png", 0.05)  # slightly smaller than before
 
 # 音频资源
 try:
-    bgm = pygame.mixer.Sound("pixel-coin-collectors/assets/audio/bgm.mp3")
-    coin_sound = pygame.mixer.Sound("pixel-coin-collectors/assets/audio/coin_sound.wav")
+    # Try relative path first
+    try:
+        bgm = pygame.mixer.Sound("assets/audio/bgm.mp3")
+        coin_sound = pygame.mixer.Sound("assets/audio/coin_sound.wav")
+    except:
+        # Fallback to full path
+        bgm = pygame.mixer.Sound("pixel-coin-collectors/assets/audio/bgm.mp3")
+        coin_sound = pygame.mixer.Sound("pixel-coin-collectors/assets/audio/coin_sound.wav")
     bgm.set_volume(0.5)
     coin_sound.set_volume(0.8)
 except FileNotFoundError as e:
@@ -304,9 +321,29 @@ def main():
                             bombs.add(Bomb())
 
         elif game_state == "game_over":
-            # 按R重启游戏
+            # 按R重启游戏，按ESC返回主菜单
             if keys_pressed[pygame.K_r]:
                 countdown = init_game()
+            elif keys_pressed[pygame.K_ESCAPE]:
+                # 写入游戏结果到文件供主启动器读取
+                try:
+                    p1_score = players.sprites()[0].score
+                    p2_score = players.sprites()[1].score
+                    result_file = "../game_result.txt"
+                    with open(result_file, 'w') as f:
+                        if p1_score > p2_score:
+                            f.write("1")
+                            print("[RESULT] Written: Player 1 wins")
+                        elif p2_score > p1_score:
+                            f.write("2")
+                            print("[RESULT] Written: Player 2 wins")
+                        else:
+                            f.write("0")
+                            print("[RESULT] Written: Draw")
+                except Exception as e:
+                    print(f"[ERROR] Could not write result file: {e}")
+                # 返回主菜单
+                running = False
 
         # 绘制画面
         screen.blit(bg, (0, 0))  # 绘制背景
@@ -322,8 +359,8 @@ def main():
 
         elif game_state == "playing":
             # 显示分数和剩余时间
-            p1_text = font.render(f"P1: {players.sprites()[0].score}", True, WHITE)
-            p2_text = font.render(f"P2: {players.sprites()[1].score}", True, WHITE)
+            p1_text = font.render(f"P1 (Blue): {players.sprites()[0].score}", True, WHITE)
+            p2_text = font.render(f"P2 (Red): {players.sprites()[1].score}", True, WHITE)
             time_text = font.render(f"TIME: {max(0, int(time_left))}", True, WHITE)
             screen.blit(p1_text, (20, 20))
             screen.blit(p2_text, (WIDTH - p2_text.get_width() - 20, 20))
@@ -333,18 +370,19 @@ def main():
             # 显示结果和重启提示
             p1_score = players.sprites()[0].score
             p2_score = players.sprites()[1].score
-            result = "P1 WINS!" if p1_score > p2_score else "P2 WINS!" if p2_score > p1_score else "TIE!"
+            result = "P1 (Blue) WINS!" if p1_score > p2_score else "P2 (Red) WINS!" if p2_score > p1_score else "TIE!"
             
             texts = [
                 font.render("GAME OVER", True, WHITE),
-                font.render(f"P1: {p1_score}", True, WHITE),
-                font.render(f"P2: {p2_score}", True, WHITE),
+                font.render(f"P1 (Blue): {p1_score}", True, WHITE),
+                font.render(f"P2 (Red): {p2_score}", True, WHITE),
                 font.render(result, True, WHITE),
-                font.render("PRESS R TO RESTART", True, WHITE)
+                font.render("PRESS R TO RESTART", True, WHITE),
+                font.render("PRESS ESC TO EXIT", True, WHITE)
             ]
             # 居中显示文字
             for i, text in enumerate(texts):
-                y_pos = HEIGHT//2 - 80 + i*40
+                y_pos = HEIGHT//2 - 100 + i*40
                 screen.blit(text, (WIDTH//2 - text.get_width()//2, y_pos))
 
         pygame.display.flip()  # 更新画面
@@ -353,7 +391,8 @@ def main():
     # 退出游戏
     bgm.stop()
     pygame.quit()
-    sys.exit()
+    # 不要调用sys.exit()，这样才能返回到主启动器
+    # sys.exit()  # 注释掉，让程序自然结束
 
 if __name__ == "__main__":
     main()

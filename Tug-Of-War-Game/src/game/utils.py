@@ -69,6 +69,19 @@ def load_image(filename):
     base_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "assets", "sprites"))
     path = os.path.join(base_dir, filename)
     print(f"[debug] Attempting to load image from: {path}")  # Debug the path
+    
+    # 检查是否是Git LFS占位符文件
+    try:
+        if os.path.exists(path) and os.path.getsize(path) < 200:  # LFS文件通常是131字节
+            with open(path, 'rb') as f:
+                header = f.read(50)
+                if b'git-lfs.github.com' in header:
+                    print(f"[WARNING] {filename} is a Git LFS placeholder file!")
+                    print(f"[WARNING] Please run 'git lfs pull' to download actual images")
+                    return None
+    except Exception as e:
+        print(f"[debug] LFS check error for {filename}: {e}")
+    
     try:
         img = pygame.image.load(path).convert_alpha()
         print(f"[debug] Successfully loaded image: {filename}")

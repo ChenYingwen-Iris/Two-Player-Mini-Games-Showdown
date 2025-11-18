@@ -189,14 +189,20 @@ class Butterfly:
     def load_images():
         if Butterfly.blue_img is None:
             try:
-                Butterfly.blue_img = pygame.image.load("butterfly_blue.png").convert_alpha()
+                Butterfly.blue_img = pygame.image.load("assets/images/butterfly_blue.png").convert_alpha()
             except Exception:
-                Butterfly.blue_img = None
+                try:
+                    Butterfly.blue_img = pygame.image.load("butterfly_blue.png").convert_alpha()
+                except Exception:
+                    Butterfly.blue_img = None
         if Butterfly.red_img is None:
             try:
-                Butterfly.red_img = pygame.image.load("butterfly_red.png").convert_alpha()
+                Butterfly.red_img = pygame.image.load("assets/images/butterfly_red.png").convert_alpha()
             except Exception:
-                Butterfly.red_img = None
+                try:
+                    Butterfly.red_img = pygame.image.load("butterfly_red.png").convert_alpha()
+                except Exception:
+                    Butterfly.red_img = None
 
     def __init__(self, x, y, style=None, moving=False):
         self.x = x
@@ -1224,6 +1230,22 @@ class ButterflyGame:
                             self.state = self.previous_state
                             pygame.mixer.music.unpause()
                         elif self.state in [GameState.START_SCREEN, GameState.GAME_OVER]:
+                            # 如果是游戏结束状态，写入结果文件
+                            if self.state == GameState.GAME_OVER:
+                                try:
+                                    result_file = "../game_result.txt"
+                                    with open(result_file, 'w') as f:
+                                        if self.player1_wins > self.player2_wins:
+                                            f.write("1")
+                                            print("[RESULT] Written: Player 1 wins")
+                                        elif self.player2_wins > self.player1_wins:
+                                            f.write("2")
+                                            print("[RESULT] Written: Player 2 wins")
+                                        else:
+                                            f.write("0")
+                                            print("[RESULT] Written: Draw")
+                                except Exception as e:
+                                    print(f"[ERROR] Could not write result file: {e}")
                             pygame.quit()
                             sys.exit()
                     elif self.state == GameState.START_SCREEN and event.key == pygame.K_SPACE:

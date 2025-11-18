@@ -261,6 +261,7 @@ class Player:
     def draw(self, surface):
         # draw player sprite
         # show pull frame when actively pulling, else ready/push frame if available
+        img = None  # Initialize img to None first
         if self.pull > 0 and self.pull_img:
             img = self.pull_img
         elif self.push_img:

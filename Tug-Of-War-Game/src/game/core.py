@@ -196,6 +196,17 @@ class Game:
                 self.game_bg = pygame.transform.smoothscale(self.game_bg, (self.width, self.height))
             except Exception:
                 pass
+        else:
+            # 创建渐变色背景作为fallback
+            print("[INFO] Using fallback gradient background (Git LFS images not available)")
+            self.game_bg = pygame.Surface((self.width, self.height))
+            # 绘制从上到下的天空渐变色 (浅蓝到深蓝)
+            for y in range(self.height):
+                ratio = y / self.height
+                r = int(135 * (1 - ratio) + 70 * ratio)
+                g = int(206 * (1 - ratio) + 130 * ratio)
+                b = int(235 * (1 - ratio) + 180 * ratio)
+                pygame.draw.line(self.game_bg, (r, g, b), (0, y), (self.width, y))
 
         # preload clone smoke frames (folder: src/assets/sprites/clone-smoke/)
         try:
@@ -584,38 +595,69 @@ class Game:
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
+                    # 如果游戏结束了，写入结果
+                    if self.game_over and self.winner:
+                        try:
+                            result_file = "../../game_result.txt"
+                            with open(result_file, 'w') as f:
+                                if self.winner == "Left team":
+                                    f.write("1")
+                                    print("[RESULT] Written: Player 1 (Left/Blue) wins")
+                                elif self.winner == "Right team":
+                                    f.write("2")
+                                    print("[RESULT] Written: Player 2 (Right/Red) wins")
+                        except Exception as e:
+                            print(f"[ERROR] Could not write result file: {e}")
                     pygame.quit()
                     sys.exit()
 
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
+                        # 如果游戏结束了，写入结果
+                        if self.game_over and self.winner:
+                            try:
+                                result_file = "../../game_result.txt"
+                                with open(result_file, 'w') as f:
+                                    if self.winner == "Left team":
+                                        f.write("1")
+                                        print("[RESULT] Written: Player 1 (Left/Blue) wins")
+                                    elif self.winner == "Right team":
+                                        f.write("2")
+                                        print("[RESULT] Written: Player 2 (Right/Red) wins")
+                            except Exception as e:
+                                print(f"[ERROR] Could not write result file: {e}")
                         pygame.quit()
                         sys.exit()
 
                     if self.state == "waiting":
-                        # CHANGED: start flicker + sound, delay actual start until flicker finishes
-                        # if event.key == pygame.K_1:
-                        #     # begin single-player selection flicker
-                        #     self.menu_selected_choice = '1'
-                        #     self.menu_flicker_timer = self.menu_flicker_duration
-                        #     self._maybe_play_select_sound()
-                        if event.key == pygame.K_2:
+                        # Start game immediately when Enter is pressed (for 2-player mode)
+                        if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
+                            # Enter starts immediately for 2-player mode
+                            self.ai_enabled = False  # Force 2-player mode
+                            self._maybe_play_select_sound()
+                            self.start()  # Start the game immediately
+                            print("Tug of War游戏已启动 (按ENTER)")
+                        elif event.key == pygame.K_2:
                             # begin two-player selection flicker
                             self.menu_selected_choice = '2'
                             self.menu_flicker_timer = self.menu_flicker_duration
                             self._maybe_play_select_sound()
-                        elif event.key == pygame.K_RETURN:  # Changed from K_2
-                            # begin start selection flicker
-                            self.menu_selected_choice = 'enter'  # Changed from '2'
-                            self.menu_flicker_timer = self.menu_flicker_duration
-                            self._maybe_play_select_sound()
-                        elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
-                            # Enter starts immediately using current ai flag
-                            self.start()
                     elif self.game_over:
                         if event.key == pygame.K_r:
                             self.reset()
                         elif event.key == pygame.K_ESCAPE:
+                            # 写入游戏结果到文件供主启动器读取
+                            try:
+                                result_file = "../../game_result.txt"
+                                with open(result_file, 'w') as f:
+                                    if self.winner == "Left team":
+                                        f.write("1")  # P1 (Blue) is on the left
+                                        print("[RESULT] Written: Player 1 (Left/Blue) wins")
+                                    elif self.winner == "Right team":
+                                        f.write("2")  # P2 (Red) is on the right
+                                        print("[RESULT] Written: Player 2 (Right/Red) wins")
+                            except Exception as e:
+                                print(f"[ERROR] Could not write result file: {e}")
                             pygame.quit()
                             sys.exit()
                     else:
