@@ -552,6 +552,18 @@ def launch_game(game_index):
             # Run the game process with cwd set so relative asset paths resolve correctly.
             # Capture stdout/stderr to help debug audio/init errors in child.
             try:
+                # If the declared script does not exist in the game folder,
+                # try a common alternative: an `assets/` subfolder (some games keep
+                # their main script under `assets/maze_game.py`). Adjust cwd/script
+                # accordingly so relative asset paths inside the game work.
+                script_full = os.path.join(cwd_for_process, script_arg)
+                if not os.path.exists(script_full):
+                    alt_full = os.path.join(cwd_for_process, 'assets', script_arg)
+                    if os.path.exists(alt_full):
+                        print(f"Note: script not found at {script_full}, using {alt_full} instead")
+                        cwd_for_process = os.path.dirname(alt_full)
+                        script_arg = os.path.basename(alt_full)
+
                 if game_name == "Coin Collectors":
                     proc = subprocess.run(
                         [PYTHON_EXECUTABLE, "-u", "-m", "game.main"],
