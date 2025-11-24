@@ -1,121 +1,74 @@
 # Two Player Mini Games Showdown
 
-A collection system containing four mini two-player games. Games are randomly selected via a spinning roulette wheel, with final scores determining the winner.
+A launcher that hosts four small two-player mini games. Games are chosen randomly by a roulette wheel. Players earn points per win and the highest total wins at the end.
 
 ## 🎮 Included Games
 
-1. **Counting Butterfly** - A game where players quickly count and answer the number of butterflies on screen
-2. **Double Maze** - A competitive maze game where players race to reach the finish line
-3. **Pixel Coin Collectors** - A battle game where players collect coins and diamonds while avoiding bombs
-4. **Tug Of War** - An intense tug-of-war competition
+1. **Counting Butterfly** — Quickly count butterflies on screen and submit the answer.
+2. **Double Maze** — Two players race through a maze to reach the finish.
+3. **Pixel Coin Collectors** — Compete to collect coins and diamonds while avoiding bombs.
+4. **Tug Of War** — Timed tug-of-war style mini-game.
 
-## 🎯 Game Rules
+## 🎯 Rules
 
-- Randomly select games via the spinning roulette wheel
-- Each game can only be played once
-- The winner of each game receives **5 points**
-- After all four games are completed, the player with the highest total score wins
+- Games are selected randomly by spinning the roulette wheel.
+- Each game may be played once.
+- A win in a mini-game awards 5 points to the winner.
+- After all four games are played, the player with the highest score wins.
 
-## 📦 Installation Dependencies
+## 📦 Installation
+
+Install Python dependencies:
 
 ```bash
-pip install -r [requirements.txt](http://_vscodecontentref_/0)
+pip install -r requirements.txt
 ```
 
-## 🚀 Running the Game Collection
+## 🚀 Run the launcher
+
+From the project root:
 
 ```bash
 python game_launcher.py
 ```
 
-## 🎲 Operation Instructions
+## 🎲 Controls
 
-### Main Menu Interface
-- **SPACE** - Spin the roulette wheel to select a game
-- **ENTER** - Start the selected game
+Main menu:
+- SPACE — Spin the roulette wheel.
+- ENTER — Start the selected game.
+- ESC — Exit (from final screen).
 
-### Final Score Interface
-- **ESC** - Exit the game
+Sub-game controls (summary):
 
-### Individual Game Operations
+- Counting Butterfly:
+  - Player 1 (left): number keys 0–9, Enter to confirm
+  - Player 2 (right): numpad 0–9, Numpad Enter to confirm
 
-#### Counting Butterfly
-- **Red Player (left)**: Input answers using number keys 0-9, Enter to confirm
-- **Blue Player (right)**: Input answers using the numeric keypad 0-9, Enter to confirm
-- Quickly and accurately count the butterflies on screen!
+- Double Maze:
+  - Player 1 (Blue): W A S D
+  - Player 2 (Red): Arrow keys
 
-#### Double Maze
-- **Blue Player A**: WASD movement
-- **Red Player B**: Arrow keys movement
-- The first player to reach the finish line (treasure chest) wins!
+- Pixel Coin Collectors:
+  - Player 1: W A S D
+  - Player 2: Arrow keys
+  - Collect coins (+1) and diamonds (+5); avoid bombs (-5)
 
-#### Pixel Coin Collectors
-- **Player 1**: WASD movement
-- **Player 2**: Arrow keys movement
-- Collect coins (+1 point) and diamonds (+5 points), avoid bombs (-5 points)
+- Tug Of War:
+  - Left team: A / D
+  - Right team: Left / Right arrows
 
-#### Tug Of War
-- **Left Team**: A/D keys to pull the rope
-- **Right Team**: Left/Right arrow keys to pull the rope
-- Pull the opponent over the line to win!
-
-## 📁 Project Structure
+## 📁 Project layout (top-level)
 
 ```
 Two-Player-Mini-Games-Showdown/
-├── game_launcher.py              # Main launcher
-├── game_wrappers/                # Game wrapper modules
-│   ├── __init__.py
-│   ├── counting_butterfly_wrapper.py
-│   ├── maze_wrapper.py
-│   ├── coin_wrapper.py
-│   └── tug_wrapper.py
-├── Counting-Butterfly-Two-Player-Game-fresh/  # Game 1
-├── Double-Maze/                  # Game 2
-├── pixel-coin-collectors/        # Game 3
-├── Tug-Of-War-Game/             # Game 4
-├── requirements.txt              # Python dependencies
-└── README.md                     # This file
+├── game_launcher.py
+├── game_wrappers/
+├── Counting-Butterfly-Two-Player-Game-fresh/
+├── Double-Maze/
+├── pixel-coin-collectors/
+├── Tug-Of-War-Game/
+└── README.md
 ```
 
-## 🎨 Features
-
-- **Spinning Roulette Wheel Animation** - Smooth and fluid wheel rotation
-- **Progressive Unlock** - Games you've played won't be selected again
-- **Score System** - Real-time display of both players' scores
-- **Final Rankings** - Display of the winner after all games
-
-## 💡 Notes
-
-1. Ensure all sub-game folders are in the same directory
-2. Games need 800x480 resolution window
-3. Some games need audio files, ensure the assets folder is complete
-
-## 🔧 Troubleshooting
-
-If you encounter audio issues, you may need to install additional audio libraries:
-
-**macOS:**
-```bash
-brew install sdl2 sdl2_mixer
-```
-
-**Linux:**
-```bash
-sudo apt-get install python3-pygame libsdl2-mixer-2.0-0
-```
-
-## 👥 Player Settings
-
-- **Player 1** (Red/Left)
-- **Player 2** (Blue/Right)
-
-## 🏆 Scoring System
-
-- **Game Victory**: +5 points
-- **Tie**: No points for either player
-- **Total Score**: The player with the highest total score wins
-
----
-
-**Have fun!**
+If you want changes to wording or extra sections (contributors, license, run instructions per OS), tell me what to add.
