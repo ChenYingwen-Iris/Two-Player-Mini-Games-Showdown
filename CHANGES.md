@@ -94,3 +94,15 @@ python game_launcher.py
 ---
 
 **如有问题，请查看终端的调试输出！** 🔍
+
+## ✨ Update (2025-11-24)
+
+### Compatibility fix: launcher fallback for game script locations
+- ✅ The launcher now supports games where the main script is placed inside an `assets/` subfolder.
+   - If `/<game_folder>/<script>` is not present, the launcher will try `/<game_folder>/assets/<script>` and run the game from that directory.
+   - This fixes a compatibility issue with `Double-Maze`, which keeps its `maze_game.py` inside `Double-Maze/assets/`.
+   - The change was implemented in `game_launcher.py` and committed (commit: `0bb5bbd`).
+
+Notes:
+- This is a non-destructive compatibility fix that avoids reorganizing existing game folders.
+- Report any games that still fail to launch so we can add tailored handling.

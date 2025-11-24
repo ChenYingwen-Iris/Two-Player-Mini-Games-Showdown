@@ -72,3 +72,8 @@ Two-Player-Mini-Games-Showdown/
 ```
 
 If you want changes to wording or extra sections (contributors, license, run instructions per OS), tell me what to add.
+
+## Compatibility note
+
+- The launcher now includes a compatibility fallback: if a game's main script (for example `maze_game.py`) is not found at the top-level of the game's folder, the launcher will try to run `assets/<script>` (running from the `assets/` directory). This allows games that keep their executable script under an `assets/` subfolder (for example `Double-Maze/assets/maze_game.py`) to be launched without moving files.
+- The change is committed in `game_launcher.py` (commit `0bb5bbd`). If you reorganize game folders later, update `GAMES[*]['folder']` in `game_launcher.py` accordingly.
