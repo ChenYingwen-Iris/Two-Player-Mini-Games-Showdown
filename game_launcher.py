@@ -9,6 +9,7 @@ import math
 import os
 import subprocess
 import importlib.util
+import time
 
 PYTHON_EXECUTABLE = sys.executable or "python3"
 
@@ -524,26 +525,68 @@ def launch_game(game_index):
             print(f"⚠ Error: Game directory not found {game_path}")
             print(f"Please confirm game folder exists")
         else:
-            # 切换到游戏目录
-            os.chdir(game_path)
-            
-            # 使用subprocess运行游戏
-            # 对于pixel-coin-collectors，需要使用python -m方式运行
-            if game_name == "Coin Collectors":
-                # 使用模块方式运行，保证 Windows/Linux 都能找到解释器
-                process = subprocess.run(
-                    [PYTHON_EXECUTABLE, "-m", "game.main"],
-                    capture_output=False
-                )
-            else:
-                # 其他游戏直接运行脚本
-                process = subprocess.run(
-                    [PYTHON_EXECUTABLE, game_script],
-                    capture_output=False
-                )
-            
-            print(f"\n游戏 {game_name} 已结束")
-            print(f"Exit code: {process.returncode}")
+            # Ensure game path exists and run subprocess from that cwd.
+            # To avoid audio device conflicts (parent launcher using pygame.mixer),
+            # quit the mixer before launching the child process and re-init after.
+            try:
+                if pygame.mixer.get_init():
+                    pygame.mixer.quit()
+                    print("✓ pygame.mixer quit to allow child process audio")
+            except Exception as e:
+                print(f"⚠ Failed to quit mixer: {e}")
+
+            # small pause to ensure device is released
+            time.sleep(0.15)
+
+            # Determine correct cwd and script path.
+            # Some subgames (Tug-Of-War) expect to be launched from the game folder's parent
+            # so that paths like "src/assets/..." resolve correctly.
+            cwd_for_process = game_path
+            script_arg = game_script
+            if os.path.basename(game_path).lower() == "src":
+                # run from parent folder and adjust script path to include 'src'
+                cwd_for_process = os.path.dirname(game_path)
+                if not script_arg.startswith("src" + os.sep) and not script_arg.startswith("src/"):
+                    script_arg = os.path.join("src", game_script)
+
+            # Run the game process with cwd set so relative asset paths resolve correctly.
+            # Capture stdout/stderr to help debug audio/init errors in child.
+            try:
+                if game_name == "Coin Collectors":
+                    proc = subprocess.run(
+                        [PYTHON_EXECUTABLE, "-u", "-m", "game.main"],
+                        cwd=cwd_for_process,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True
+                    )
+                else:
+                    proc = subprocess.run(
+                        [PYTHON_EXECUTABLE, "-u", script_arg],
+                        cwd=cwd_for_process,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True
+                    )
+
+                # Print child process output for debugging
+                if proc.stdout:
+                    print(f"[child stdout]\n{proc.stdout}")
+                if proc.stderr:
+                    print(f"[child stderr]\n{proc.stderr}")
+
+            except Exception as e:
+                print(f"⚠ Failed to launch child process: {e}")
+
+            # small pause before re-init
+            time.sleep(0.1)
+
+            # Re-initialize mixer after child process exits so launcher audio works again.
+            try:
+                pygame.mixer.init()
+                print("✓ pygame.mixer re-initialized after child process")
+            except Exception as e:
+                print(f"⚠ Failed to re-initialize mixer: {e}")
         
         # 恢复启动器窗口
         pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -734,7 +777,7 @@ def main():
             elif state == "WAITING":
                 if selected_game_index is not None:
                     game_name = GAMES[selected_game_index]["display_name"]
-                    selected_text = font_medium.render(f"Selected: {game_name}", True, YELLOW)
+                    selected_text = font_medium.render(f"Press ENTER to Start: {game_name}", True, YELLOW)
                     selected_rect = selected_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 90))
                     screen.blit(selected_text, selected_rect)
                     
