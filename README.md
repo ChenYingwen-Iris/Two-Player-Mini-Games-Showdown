@@ -1,99 +1,99 @@
-# 双人游戏合集 - Two Player Mini Games Showdown
+# Two Player Mini Games Showdown
 
-一个包含四个迷你双人游戏的合集系统，通过旋转轮盘随机选择游戏，最终统计总分决出胜者。
+A collection system containing four mini two-player games. Games are randomly selected via a spinning roulette wheel, with final scores determining the winner.
 
-## 🎮 包含的游戏
+## 🎮 Included Games
 
-1. **数蝴蝶 (Counting Butterfly)** - 快速数数并回答蝴蝶数量的游戏
-2. **双人迷宫 (Double Maze)** - 竞速到达终点的迷宫游戏
-3. **硬币收集 (Pixel Coin Collectors)** - 收集硬币和钻石的对战游戏
-4. **拔河大战 (Tug Of War)** - 激烈的拔河对抗游戏
+1. **Counting Butterfly** - A game where players quickly count and answer the number of butterflies on screen
+2. **Double Maze** - A competitive maze game where players race to reach the finish line
+3. **Pixel Coin Collectors** - A battle game where players collect coins and diamonds while avoiding bombs
+4. **Tug Of War** - An intense tug-of-war competition
 
-## 🎯 游戏规则
+## 🎯 Game Rules
 
-- 通过旋转轮盘随机选择游戏
-- 每个游戏只能玩一次
-- 每局游戏的胜者获得 **5 分**
-- 四个游戏全部玩完后，总分最高的玩家获胜
+- Randomly select games via the spinning roulette wheel
+- Each game can only be played once
+- The winner of each game receives **5 points**
+- After all four games are completed, the player with the highest total score wins
 
-## 📦 安装依赖
+## 📦 Installation Dependencies
 
 ```bash
-pip install -r requirements.txt
+pip install -r [requirements.txt](http://_vscodecontentref_/0)
 ```
 
-## 🚀 运行游戏合集
+## 🚀 Running the Game Collection
 
 ```bash
 python game_launcher.py
 ```
 
-## 🎲 操作说明
+## 🎲 Operation Instructions
 
-### 主菜单界面
-- **SPACE** - 旋转轮盘选择游戏
-- **ENTER** - 开始选中的游戏
+### Main Menu Interface
+- **SPACE** - Spin the roulette wheel to select a game
+- **ENTER** - Start the selected game
 
-### 最终分数界面
-- **ESC** - 退出游戏
+### Final Score Interface
+- **ESC** - Exit the game
 
-### 各个子游戏的操作
+### Individual Game Operations
 
-#### 数蝴蝶 (Counting Butterfly)
-- **红色玩家 (左侧)**: 数字键 0-9 输入答案，Enter 确认
-- **蓝色玩家 (右侧)**: 小键盘 0-9 输入答案，小键盘 Enter 确认
-- 快速准确地数出屏幕上的蝴蝶数量！
+#### Counting Butterfly
+- **Red Player (left)**: Input answers using number keys 0-9, Enter to confirm
+- **Blue Player (right)**: Input answers using the numeric keypad 0-9, Enter to confirm
+- Quickly and accurately count the butterflies on screen!
 
-#### 双人迷宫 (Double Maze)
-- **蓝色玩家 A**: WASD 移动
-- **红色玩家 B**: 方向键移动
-- 第一个到达终点（宝箱）的玩家获胜！
+#### Double Maze
+- **Blue Player A**: WASD movement
+- **Red Player B**: Arrow keys movement
+- The first player to reach the finish line (treasure chest) wins!
 
-#### 硬币收集 (Pixel Coin Collectors)
-- **玩家 1**: WASD 移动
-- **玩家 2**: 方向键移动
-- 收集金币（+1分）和钻石（+5分），避开炸弹（-5分）
+#### Pixel Coin Collectors
+- **Player 1**: WASD movement
+- **Player 2**: Arrow keys movement
+- Collect coins (+1 point) and diamonds (+5 points), avoid bombs (-5 points)
 
-#### 拔河大战 (Tug Of War)
-- **左队**: A/D 键拉绳
-- **右队**: 左/右方向键拉绳
-- 将对手拉过线即可获胜！
+#### Tug Of War
+- **Left Team**: A/D keys to pull the rope
+- **Right Team**: Left/Right arrow keys to pull the rope
+- Pull the opponent over the line to win!
 
-## 📁 项目结构
+## 📁 Project Structure
 
 ```
 Two-Player-Mini-Games-Showdown/
-├── game_launcher.py              # 主启动器
-├── game_wrappers/                # 游戏包装器模块
+├── game_launcher.py              # Main launcher
+├── game_wrappers/                # Game wrapper modules
 │   ├── __init__.py
 │   ├── counting_butterfly_wrapper.py
 │   ├── maze_wrapper.py
 │   ├── coin_wrapper.py
 │   └── tug_wrapper.py
-├── Counting-Butterfly-Two-Player-Game-fresh/  # 子游戏1
-├── Double-Maze/                  # 子游戏2
-├── pixel-coin-collectors/        # 子游戏3
-├── Tug-Of-War-Game/             # 子游戏4
-├── requirements.txt              # Python依赖
-└── README.md                     # 本文件
+├── Counting-Butterfly-Two-Player-Game-fresh/  # Game 1
+├── Double-Maze/                  # Game 2
+├── pixel-coin-collectors/        # Game 3
+├── Tug-Of-War-Game/             # Game 4
+├── requirements.txt              # Python dependencies
+└── README.md                     # This file
 ```
 
-## 🎨 特色功能
+## 🎨 Features
 
-- **旋转轮盘动画** - 流畅的轮盘旋转效果
-- **渐进式解锁** - 玩过的游戏不会再次被选中
-- **积分系统** - 实时显示双方分数
-- **最终评比** - 四局游戏结束后显示最终获胜者
+- **Spinning Roulette Wheel Animation** - Smooth and fluid wheel rotation
+- **Progressive Unlock** - Games you've played won't be selected again
+- **Score System** - Real-time display of both players' scores
+- **Final Rankings** - Display of the winner after all games
 
-## 💡 注意事项
+## 💡 Notes
 
-1. 确保所有子游戏文件夹都在同一目录下
-2. 游戏需要 800x480 分辨率窗口
-3. 某些游戏需要音频文件，请确保 assets 文件夹完整
+1. Ensure all sub-game folders are in the same directory
+2. Games need 800x480 resolution window
+3. Some games need audio files, ensure the assets folder is complete
 
-## 🔧 故障排除
+## 🔧 Troubleshooting
 
-如果遇到音频问题，可能需要安装额外的音频库：
+If you encounter audio issues, you may need to install additional audio libraries:
 
 **macOS:**
 ```bash
@@ -105,17 +105,17 @@ brew install sdl2 sdl2_mixer
 sudo apt-get install python3-pygame libsdl2-mixer-2.0-0
 ```
 
-## 👥 玩家设置
+## 👥 Player Settings
 
-- **玩家 1** (红色/左侧)
-- **玩家 2** (蓝色/右侧)
+- **Player 1** (Red/Left)
+- **Player 2** (Blue/Right)
 
-## 🏆 评分系统
+## 🏆 Scoring System
 
-- 游戏胜利: +5 分
-- 平局: 双方均不得分
-- 总分最高者为最终赢家
+- **Game Victory**: +5 points
+- **Tie**: No points for either player
+- **Total Score**: The player with the highest total score wins
 
 ---
 
-**祝你游戏愉快！Have Fun! 🎉**
+**Have fun!**
