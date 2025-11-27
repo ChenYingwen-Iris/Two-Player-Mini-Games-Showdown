@@ -1,3 +1,4 @@
+import os
 import pygame
 import random
 import sys
@@ -45,14 +46,26 @@ SCORE_COLOR = (255, 215, 0)    # gold for generic score labels
 def load_image(path, scale=1):
     """Load and scale images while preserving transparency"""
     try:
-        img = pygame.image.load(path).convert_alpha()
+        img = pygame.image.load(asset_path(path)).convert_alpha()
         if scale != 1:
             new_size = (max(1, int(img.get_width() * scale)), max(1, int(img.get_height() * scale)))
             img = pygame.transform.scale(img, new_size)
         return img
-    except FileNotFoundError:
+    except Exception:
+        # pygame raises pygame.error when a file is missing; catch any issue and exit with a helpful message
         print(f"Error: Image resource not found - {path}")
         sys.exit(1)
+
+
+def asset_path(rel_path: str) -> str:
+    """Return an absolute path to a resource located relative to this file's parent package.
+
+    This makes resource loading robust regardless of the current working directory when the
+    script is executed. Example: asset_path('assets/images/starry_sky.png')
+    """
+    base_dir = os.path.dirname(__file__)  # pixel-coin-collectors/game
+    project_dir = os.path.normpath(os.path.join(base_dir, ".."))  # pixel-coin-collectors
+    return os.path.normpath(os.path.join(project_dir, rel_path))
 
 # Load background and scale to screen size so it fits the window
 try:
@@ -88,19 +101,19 @@ bomb_img = load_image("assets/images/bomb.png", 0.06)
 # 音频资源
 try:
     # main sounds
-    bgm = pygame.mixer.Sound("assets/audio/bgm.mp3")
-    coin_sound = pygame.mixer.Sound("assets/audio/coin_sound.wav")
+    bgm = pygame.mixer.Sound(asset_path("assets/audio/bgm.mp3"))
+    coin_sound = pygame.mixer.Sound(asset_path("assets/audio/coin_sound.wav"))
 
     # countdown sounds for 3-2-1: try per-number files, fall back to single file
     try:
-        countdown_sounds[3] = pygame.mixer.Sound("assets/audio/count3.wav")
-        countdown_sounds[2] = pygame.mixer.Sound("assets/audio/count2.wav")
-        countdown_sounds[1] = pygame.mixer.Sound("assets/audio/count1.wav")
+        countdown_sounds[3] = pygame.mixer.Sound(asset_path("assets/audio/count3.wav"))
+        countdown_sounds[2] = pygame.mixer.Sound(asset_path("assets/audio/count2.wav"))
+        countdown_sounds[1] = pygame.mixer.Sound(asset_path("assets/audio/count1.wav"))
         for s in countdown_sounds.values():
             s.set_volume(0.9)
     except (pygame.error, FileNotFoundError):
         try:
-            single = pygame.mixer.Sound("assets/audio/countdown.wav")
+            single = pygame.mixer.Sound(asset_path("assets/audio/countdown.wav"))
             single.set_volume(0.9)
             countdown_sounds = {3: single, 2: single, 1: single}
         except (pygame.error, FileNotFoundError):
@@ -108,14 +121,14 @@ try:
 
     # bomb hit sound
     try:
-        bomb_sound = pygame.mixer.Sound("assets/audio/bomb.wav")
+        bomb_sound = pygame.mixer.Sound(asset_path("assets/audio/bomb.wav"))
         bomb_sound.set_volume(0.9)
     except (pygame.error, FileNotFoundError):
         bomb_sound = None
 
     # diamond collect sound
     try:
-        diamond_sound = pygame.mixer.Sound("assets/audio/diamond.wav")
+        diamond_sound = pygame.mixer.Sound(asset_path("assets/audio/diamond.wav"))
         diamond_sound.set_volume(0.9)
     except (pygame.error, FileNotFoundError):
         diamond_sound = None
@@ -244,25 +257,102 @@ class Bomb(pygame.sprite.Sprite):
         if self.y > HEIGHT:
             self.reset()
 
+
+# -----------------------
+# Visual / feedback effects
+# -----------------------
+# Floating text for +5 / -5
+class FloatingText:
+    def __init__(self, text, pos, color=WHITE, lifetime=1.0, vel=(0, -40)):
+        self.text = text
+        self.color = color
+        self.lifetime = lifetime
+        self.age = 0.0
+        # position in pixels (float)
+        self.x, self.y = float(pos[0]), float(pos[1])
+        self.vx, self.vy = float(vel[0]), float(vel[1])
+        # render surface
+        self.surf = font.render(self.text, True, self.color)
+
+    def update(self, dt):
+        self.age += dt
+        if self.age < self.lifetime:
+            self.x += self.vx * dt
+            self.y += self.vy * dt
+
+    def draw(self, surface):
+        alpha = max(0, 255 * (1 - (self.age / self.lifetime)))
+        s = self.surf.copy()
+        s.set_alpha(int(alpha))
+        surface.blit(s, (int(self.x - s.get_width() / 2), int(self.y - s.get_height() / 2)))
+
+
+# Simple particle emitter for small colored circles
+class ParticleEmitter:
+    def __init__(self, pos, color, count=12, spread=60, speed=120, lifetime=0.8):
+        self.particles = []
+        self.lifetime = lifetime
+        for _ in range(count):
+            angle = random.random() * 2 * 3.14159
+            spd = speed * (0.5 + random.random() * 0.8)
+            vx = spd * random.uniform(-1, 1)
+            vy = spd * random.uniform(-1, 1)
+            size = random.randint(2, 5)
+            self.particles.append({
+                "x": float(pos[0]),
+                "y": float(pos[1]),
+                "vx": vx,
+                "vy": vy,
+                "life": lifetime,
+                "age": 0.0,
+                "size": size,
+                "color": color,
+            })
+
+    def update(self, dt):
+        for p in self.particles:
+            p["age"] += dt
+            if p["age"] <= p["life"]:
+                p["x"] += p["vx"] * dt
+                p["y"] += p["vy"] * dt
+
+        # remove dead
+        self.particles = [p for p in self.particles if p["age"] < p["life"]]
+
+    def draw(self, surface):
+        for p in self.particles:
+            alpha = max(0, 255 * (1 - p["age"] / p["life"]))
+            col = p["color"] + (int(alpha),)
+            s = pygame.Surface((p["size"] * 2, p["size"] * 2), pygame.SRCALPHA)
+            pygame.draw.circle(s, col, (p["size"], p["size"]), p["size"]) 
+            surface.blit(s, (int(p["x"] - p["size"]), int(p["y"] - p["size"])))
+
+
+# effect containers
+emitters = []         # list of ParticleEmitter
+floating_texts = []   # list of FloatingText
+# screen flash effect (dict)
+screen_flash = {"alpha": 0.0, "color": (0, 0, 0), "decay": 4.0}
+
 # 像素字体加载（确保字体文件存在）
 try:
-    font = pygame.font.Font("assets/fonts/PressStart2P.ttf", 24)
+    font = pygame.font.Font(asset_path("assets/fonts/PressStart2P.ttf"), 24)
 except FileNotFoundError:
     print("Warning: Pixel font not found, using default font")
     font = pygame.font.SysFont(None, 24)
 # Large font for 3-2-1 countdown
 try:
-    font_big = pygame.font.Font("assets/fonts/PressStart2P.ttf", 96)
+    font_big = pygame.font.Font(asset_path("assets/fonts/PressStart2P.ttf"), 96)
 except FileNotFoundError:
     font_big = pygame.font.SysFont(None, 96)
 # Title/instruction font (PressStart2P used if available) — made smaller
 try:
-    title_font = pygame.font.Font("assets/fonts/PressStart2P.ttf", 28)  # smaller title
+    title_font = pygame.font.Font(asset_path("assets/fonts/PressStart2P.ttf"), 28)  # smaller title
 except FileNotFoundError:
     title_font = pygame.font.SysFont(None, 28)
 # New: smaller instruction font (PressStart2P)
 try:
-    instr_font = pygame.font.Font("assets/fonts/PressStart2P.ttf", 18)  # smaller instructions
+    instr_font = pygame.font.Font(asset_path("assets/fonts/PressStart2P.ttf"), 18)  # smaller instructions
 except FileNotFoundError:
     instr_font = pygame.font.SysFont(None, 18)
 
@@ -320,6 +410,9 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                # allow player to quit quickly with Esc
+                running = False
 
         keys_pressed = pygame.key.get_pressed()
 
@@ -364,6 +457,13 @@ def main():
                                 coin_sound.play()
                         except Exception:
                             pass
+                        # spawn visual feedback: floating +5 and golden particles + soft flash
+                        fx_pos = diamond.rect.center
+                        floating_texts.append(FloatingText("+5", fx_pos, color=(255, 223, 0), lifetime=0.9, vel=(0, -30)))
+                        emitters.append(ParticleEmitter(fx_pos, color=(255, 215, 0), count=14, speed=150))
+                        screen_flash["alpha"] = 120.0
+                        screen_flash["color"] = (255, 215, 0)
+
                         diamond.reset()
                         if len(diamonds) < 5:
                             diamonds.add(Diamond())
@@ -380,6 +480,13 @@ def main():
                                 bomb_sound.play()
                         except Exception:
                             pass
+                        # spawn visual feedback: floating -5 and red particles + strong red flash
+                        fx_pos = bomb.rect.center
+                        floating_texts.append(FloatingText("-5", fx_pos, color=(255, 80, 80), lifetime=0.9, vel=(0, -30)))
+                        emitters.append(ParticleEmitter(fx_pos, color=(255, 80, 80), count=16, speed=140))
+                        screen_flash["alpha"] = 200.0
+                        screen_flash["color"] = (255, 80, 80)
+
                         bomb.reset()
                         if len(bombs) < 5:
                             bombs.add(Bomb())
@@ -465,6 +572,36 @@ def main():
                         bomb_sound.play()
                     except Exception:
                         pass
+
+        # Update and draw effects (particles, floating text, and flash)
+        # Update floating texts and emitters
+        dt = clock.get_time() / 1000.0
+        for ft in list(floating_texts):
+            ft.update(dt)
+            if ft.age >= ft.lifetime:
+                floating_texts.remove(ft)
+
+        for em in list(emitters):
+            em.update(dt)
+            if len(em.particles) == 0:
+                emitters.remove(em)
+
+        # Draw particles and floating texts on top of game elements
+        for em in emitters:
+            em.draw(screen)
+
+        for ft in floating_texts:
+            ft.draw(screen)
+
+        # screen flash (overlay with additive-like tint)
+        if screen_flash["alpha"] > 1.0:
+            ov = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+            # clamp alpha to 255
+            a = max(0, min(255, int(screen_flash["alpha"])))
+            ov.fill(screen_flash["color"] + (a,))
+            screen.blit(ov, (0, 0))
+            # decay alpha
+            screen_flash["alpha"] = max(0.0, screen_flash["alpha"] - screen_flash["decay"] * dt * 60)
 
         pygame.display.flip()  # 更新画面
         clock.tick(60)  # 60FPS
