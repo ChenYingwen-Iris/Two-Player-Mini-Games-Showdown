@@ -7,14 +7,14 @@ import sys
 pygame.init()
 pygame.mixer.init()
 
-# 画布设置
+# Canvas setup
 WIDTH, HEIGHT = 800, 480
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Pixel Coin Collectors")
 
 # 全局变量声明（在函数外初始化）
 game_state = ""  # 游戏状态：countdown/playing/game_over
-players = None    # 玩家组
+players = None    # Player组
 coins = None      # 金币组
 time_left = 0     # 剩余时间
 diamonds = None   # 钻石组（新增）
@@ -23,7 +23,7 @@ bombs = None      # 炸弹组（新增）
 countdown_sounds = {}   # map {3: Sound, 2: Sound, 1: Sound} or empty if none
 countdown_last = None
 
-# 颜色（像素风格高对比度色）
+# 颜色（Pixel风格高对比度色）
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
@@ -42,7 +42,7 @@ RESULT_COLOR = (173, 216, 230) # lightblue for result
 RESTART_COLOR = (240, 230, 140) # khaki for restart instruction
 SCORE_COLOR = (255, 215, 0)    # gold for generic score labels
 
-# 资源加载函数
+# 资源Load函数
 def load_image(path, scale=1):
     """Load and scale images while preserving transparency"""
     try:
@@ -79,14 +79,14 @@ except Exception:
     bg = pygame.Surface((WIDTH, HEIGHT))
     bg.fill(BLACK)
 
-# 玩家1的三个方向帧
+# Player1的三个方向帧
 player1_frames = {
     "front": load_image("assets/images/player1/front.png", 0.5),  # 正面静止
     "left": load_image("assets/images/player1/left.png", 0.5),    # 向左
     "right": load_image("assets/images/player1/right.png", 0.5)   # 向右
 }
 
-# 玩家2的三个方向帧
+# Player2的三个方向帧
 player2_frames = {
     "front": load_image("assets/images/player2/front.png", 0.5),  # 正面静止
     "left": load_image("assets/images/player2/left.png", 0.5),    # 向左
@@ -155,7 +155,7 @@ except (pygame.error, FileNotFoundError) as e:
     except NameError:
         diamond_sound = None
 
-# 玩家类（支持正面、左右方向切换）
+# Player类（支持正面、左右方向切换）
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y, keys, frames):
         super().__init__()
@@ -193,7 +193,7 @@ class Player(pygame.sprite.Sprite):
         self.image = self.frames[self.current_direction]
         self.rect.center = (self.x, self.y)
 
-# 金币类
+# Coin class
 class Coin(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -215,7 +215,7 @@ class Coin(pygame.sprite.Sprite):
         if self.y > HEIGHT:  # 超出屏幕底部则重置
             self.reset()
 
-# 新增：钻石类（行为与金币相同，但给分不同）
+# 新增：钻石类（行为与金币相同，But different scores）
 class Diamond(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -334,7 +334,7 @@ floating_texts = []   # list of FloatingText
 # screen flash effect (dict)
 screen_flash = {"alpha": 0.0, "color": (0, 0, 0), "decay": 4.0}
 
-# 像素字体加载（确保字体文件存在）
+# Pixel fontLoad（确保字体文件存在）
 try:
     font = pygame.font.Font(asset_path("assets/fonts/PressStart2P.ttf"), 24)
 except FileNotFoundError:
@@ -361,11 +361,11 @@ def init_game():
     # 声明全局变量（关键修复）
     global players, coins, time_left, game_state, diamonds, bombs, countdown_last
     game_state = "countdown"  # 初始状态为倒计时
-    countdown = 3  # 3秒倒计时
-    time_left = 30  # 游戏时长改为30秒（之前为60秒）
+    countdown = 3  # 3seconds倒计时
+    time_left = 30  # Game duration changed to30seconds（之前为60seconds）
     countdown_last = None
 
-    # 初始化玩家（玩家1: WASD，玩家2: 方向键）
+    # 初始化Player（Player1: WASD，Player2: Arrow keys）
     player1 = Player(
         x=WIDTH // 4,
         y=HEIGHT - 100,
@@ -402,7 +402,7 @@ def main():
     global game_state, time_left, players, coins, diamonds, bombs, countdown_last, countdown_sounds
     clock = pygame.time.Clock()
     countdown = init_game()
-    bgm.play(-1)  # 循环播放背景音乐
+    bgm.play(-1)  # 循环播放Background音乐
 
     running = True
     while running:
@@ -429,7 +429,7 @@ def main():
             if time_left <= 0:
                 game_state = "game_over"
 
-            # 更新玩家（移动和方向切换）
+            # 更新Player（移动和方向切换）
             players.update(keys_pressed)
 
             # 更新金币（下落+碰撞检测）
@@ -468,7 +468,7 @@ def main():
                         if len(diamonds) < 5:
                             diamonds.add(Diamond())
 
-            # 更新炸弹（下落+碰撞检测，拾取扣5）
+            # Update bombs（下落+碰撞检测，拾取扣5）
             for bomb in list(bombs):
                 bomb.update()
                 for player in players:
@@ -496,14 +496,14 @@ def main():
             if keys_pressed[pygame.K_r]:
                 countdown = init_game()
 
-        # 绘制画面
-        screen.blit(bg, (0, 0))  # 绘制背景
-        players.draw(screen)      # 绘制玩家
-        coins.draw(screen)        # 绘制金币
-        diamonds.draw(screen)     # 绘制钻石
-        bombs.draw(screen)        # 绘制炸弹
+        # Draw画面
+        screen.blit(bg, (0, 0))  # DrawBackground
+        players.draw(screen)      # DrawPlayer
+        coins.draw(screen)        # Draw金币
+        diamonds.draw(screen)     # Draw钻石
+        bombs.draw(screen)        # Draw炸弹
 
-        # 绘制文字（根据游戏状态）
+        # DrawText（根据游戏状态）
         if game_state == "countdown":
             # Play a sound once per integer countdown step (3,2,1)
             current_count = max(1, int(countdown) + 1)
@@ -552,7 +552,7 @@ def main():
                 font.render("PRESS R TO RESTART", True, RESTART_COLOR),
                 font.render("Press ESC to exit", True, (200, 200, 200))
             ]
-            # 居中显示文字
+            # Center align text
             for i, text in enumerate(texts):
                 y_pos = HEIGHT//2 - 80 + i*40
                 screen.blit(text, (WIDTH//2 - text.get_width()//2, y_pos))

@@ -10,7 +10,7 @@ WIDTH, HEIGHT = 800, 480
 FPS = 60
 TIMER_SECONDS = 3 * 60  # 3 分钟
 
-BG_PATH = "assets/background_new.png"  # 使用像素风格的草地背景
+BG_PATH = "assets/background_new.png"  # 使用Pixel风格的草地Background
 BLUE_PATH = "maze/assets/blue_player.png"
 BLUE_STAND_PATH = "maze/assets/blue_player_stand.png"
 RED_PATH = "maze/assets/red_player.png"
@@ -24,7 +24,7 @@ RED_START = (20, 428)  # HEIGHT(480) - PLAYER_SIZE(32) - 20 = 428
 
 # 终点/旗子区域（终点区域）
 END_ZONE = pygame.Rect(745, 160, 50, 80)
-# 兼容老代码变量名（可选）
+# Compatible with old code variable names（可选）
 FLAG_RECT = END_ZONE
 
 PLAYER_SIZE = 32
@@ -42,7 +42,7 @@ current_beat_index = 0
 
 
 def is_hay_wall(rgb):
-    """判断这个像素是不是黄色草垛"""
+    """判断这个Pixel是不是Yellow草垛"""
     r, g, b, *_ = rgb  # 忽略多余的通道，例如 Alpha
     # 主体是金黄
     if r > 150 and g > 110 and b < 90:
@@ -54,7 +54,7 @@ def is_hay_wall(rgb):
 
 
 def build_wall_mask(bg_surf):
-    """把整张背景图扫一遍，生成一个 True/False 的墙体表"""
+    """把整张Background图扫一遍，生成一个 True/False 的墙体表"""
     w, h = bg_surf.get_size()
     px = pygame.PixelArray(bg_surf)
     wall_mask = [[False] * w for _ in range(h)]
@@ -68,7 +68,7 @@ def build_wall_mask(bg_surf):
 
 
 def rect_hits_wall(rect, mask):
-    """玩家的矩形跟草垛有没有撞上"""
+    """Player的矩形跟草垛有没有撞上"""
     # iterate only over the intersection between rect and the mask bounds
     mw, mh = mask.get_size()
     x0 = max(0, rect.left)
@@ -88,7 +88,7 @@ def main():
     pygame.display.set_caption("Pixel Maze Duel")
     clock = pygame.time.Clock()
 
-    # 尝试加载 Press Start 2P 字体（放在 assets 中），没有则回退到系统字体
+    # Try toLoad Press Start 2P 字体（放在 assets 中），没有则回退到系统字体
     def load_press_start_font(size):
         possible_paths = ["assets/PressStart2P-Regular.ttf", "assets/pressstart2p.ttf"]
         for p in possible_paths:
@@ -313,12 +313,12 @@ def main():
     # 显示鼠标，允许鼠标自由移出窗口
     pygame.mouse.set_visible(True)
 
-    # 加载背景图片
+    # LoadBackground图片
     bg_image = pygame.image.load(BG_PATH).convert()
     if bg_image.get_size() != (WIDTH, HEIGHT):
         bg_image = pygame.transform.scale(bg_image, (WIDTH, HEIGHT))
     
-    # 直接使用背景图片
+    # 直接使用Background图片
     bg = bg_image.copy()
     # Show the start screen now that the background is ready
     show_start_screen()
@@ -374,45 +374,45 @@ def main():
     except Exception:
         pass
     
-    # 从背景图片中提取一个草垛块作为纹理（如果需要）
+    # 从Background图片中提取一个草垛块作为纹理（如果需要）
     # 草垛纹理：从图片中提取一个40x40的区域
-    # 先检查图片中是否有合适的草垛区域，否则使用棕色方块
+    # 先检查图片中是否有合适的草垛区域，Otherwise use brown square
     try:
         hay_texture = bg_image.subsurface(pygame.Rect(100, 50, 40, 40)).copy()
     except:
         # 如果无法提取，创建一个简单的棕色纹理
         hay_texture = pygame.Surface((40, 40))
-        hay_texture.fill((140, 100, 30))  # 棕黄色
+        hay_texture.fill((140, 100, 30))  # 棕Yellow
 
-    # 玩家贴图 - 加载行走和站立两种状态，保持原始宽高比
-    # 统一使用相同的目标高度，确保所有玩家图片大小一致
-    PLAYER_HEIGHT = PLAYER_SIZE  # 32像素高度
+    # Player贴图 - Load行走和站立两种状态，保持原始宽高比
+    # 统一使用相同的目标高度，确保所有PlayerImage sizes consistent
+    PLAYER_HEIGHT = PLAYER_SIZE  # 32Pixel高度
     
-    # 蓝色玩家 - 行走图
+    # Blue player - 行走图
     blue_original = pygame.image.load(BLUE_PATH).convert_alpha()
     blue_ratio = blue_original.get_width() / blue_original.get_height()
     blue_width = int(PLAYER_HEIGHT * blue_ratio)
     blue_img = pygame.transform.smoothscale(blue_original, (blue_width, PLAYER_HEIGHT))
     
-    # 蓝色玩家 - 站立图
+    # Blue player - 站立图
     blue_stand_original = pygame.image.load(BLUE_STAND_PATH).convert_alpha()
     blue_stand_ratio = blue_stand_original.get_width() / blue_stand_original.get_height()
     blue_stand_width = int(PLAYER_HEIGHT * blue_stand_ratio)
     blue_stand_img = pygame.transform.smoothscale(blue_stand_original, (blue_stand_width, PLAYER_HEIGHT))
     
-    # 红色玩家 - 行走图
+    # Red player - 行走图
     red_original = pygame.image.load(RED_PATH).convert_alpha()
     red_ratio = red_original.get_width() / red_original.get_height()
     red_width = int(PLAYER_HEIGHT * red_ratio)
     red_img = pygame.transform.smoothscale(red_original, (red_width, PLAYER_HEIGHT))
     
-    # 红色玩家 - 站立图
+    # Red player - 站立图
     red_stand_original = pygame.image.load(RED_STAND_PATH).convert_alpha()
     red_stand_ratio = red_stand_original.get_width() / red_stand_original.get_height()
     red_stand_width = int(PLAYER_HEIGHT * red_stand_ratio)
     red_stand_img = pygame.transform.smoothscale(red_stand_original, (red_stand_width, PLAYER_HEIGHT))
     
-    # 加载宝箱图片作为终点标记
+    # Load宝箱图片作为终点标记
     chest_img_original = pygame.image.load(CHEST_PATH).convert_alpha()
     # 保持原始宽高比缩放宝箱，以高度为基准
     original_width = chest_img_original.get_width()
@@ -420,7 +420,7 @@ def main():
     aspect_ratio = original_width / original_height
     
     # 设置目标高度（可以调整这个值来改变宝箱大小）
-    target_height = 60  # 宝箱高度
+    target_height = 60  # Treasure chest height
     target_width = int(target_height * aspect_ratio)
     
     chest_img = pygame.transform.smoothscale(chest_img_original, (target_width, target_height))
@@ -429,12 +429,12 @@ def main():
     # 宝箱将居中显示在原来的终点位置
     chest_rect = chest_img.get_rect(center=END_ZONE.center)
     
-    # 加载障碍物草丛图片
+    # Load障碍物草丛图片
     grass_img_original = pygame.image.load(GRASS_PATH).convert_alpha()
-    # 草丛缩放到40x40像素（与迷宫单元格大小一致）
+    # 草丛缩放到40x40Pixel（与迷宫单元格大小一致）
     grass_img = pygame.transform.smoothscale(grass_img_original, (40, 40))
 
-    # 不使用像素级碰撞检测，使用矩形碰撞
+    # 不使用Pixel级碰撞检测，使用矩形碰撞
     hay_wall_mask = pygame.mask.Mask((WIDTH, HEIGHT))  # all False (no collisions)
 
     # Colors
@@ -535,14 +535,14 @@ def main():
     # initial maze: 40×40 tiles, 1-cell-wide passages (passage_expand=0)
     OBSTACLES = generate_obstacles(cell=40, passage_expand=0)
 
-    # 玩家当前位置（浮点数）
+    # Player当前位置（浮点数）
     blue_x, blue_y = BLUE_START
     red_x, red_y = RED_START
 
     # 动画计数器 - 用于控制走路动画的切换
     blue_anim_counter = 0
     red_anim_counter = 0
-    ANIM_SPEED = 10  # 每10帧切换一次动画
+    ANIM_SPEED = 10  # 每10Switch animation frame
 
     start_ticks = pygame.time.get_ticks()
     # Use PressStart2P font everywhere when available
@@ -603,7 +603,7 @@ def main():
         keys = pygame.key.get_pressed()
 
         if winner is None:
-            # ---------- 蓝玩家移动 (WASD) ----------
+            # ---------- 蓝Player移动 (WASD) ----------
             old_bx, old_by = blue_x, blue_y
             blue_moving = False
             if keys[pygame.K_w]:
@@ -619,7 +619,7 @@ def main():
                 blue_x += PLAYER_SPEED
                 blue_moving = True
 
-            # 更新蓝色玩家动画计数器
+            # 更新Blue player动画计数器
             if blue_moving:
                 blue_anim_counter += 1
             else:
@@ -638,7 +638,7 @@ def main():
             if rect_hits_wall(blue_rect, hay_wall_mask):
                 print(f"[DEBUG] Blue collided at ({blue_x},{blue_y})")
 
-            # ---------- 红玩家移动 (方向键) ----------
+            # ---------- 红Player移动 (Arrow keys) ----------
             old_rx, old_ry = red_x, red_y
             red_moving = False
             if keys[pygame.K_UP]:
@@ -654,7 +654,7 @@ def main():
                 red_x += PLAYER_SPEED
                 red_moving = True
 
-            # 更新红色玩家动画计数器
+            # 更新Red player动画计数器
             if red_moving:
                 red_anim_counter += 1
             else:
@@ -696,15 +696,15 @@ def main():
                 else:
                     winner = "Draw"
 
-        # ---------- 绘制 ----------
+        # ---------- Draw ----------
         screen.blit(bg, (0, 0))
 
-        # 绘制障碍物 - 使用草丛图片平铺
+        # Draw障碍物 - 使用草丛图片平铺
         for r in OBSTACLES:
             # 用40x40的草丛图片平铺填充整个障碍物区域
             for y in range(r.top, r.bottom, 40):
                 for x in range(r.left, r.right, 40):
-                    # 计算需要绘制的区域（处理边缘不完整的情况）
+                    # 计算需要Draw的区域（处理边缘不完整的情况）
                     draw_width = min(40, r.right - x)
                     draw_height = min(40, r.bottom - y)
                     
@@ -712,14 +712,14 @@ def main():
                         # 完整的草丛
                         screen.blit(grass_img, (x, y))
                     else:
-                        # 部分草丛（裁剪）
+                        # Partial grass（裁剪）
                         src_rect = pygame.Rect(0, 0, draw_width, draw_height)
                         screen.blit(grass_img, (x, y), src_rect)
 
-        # 绘制终点宝箱（按原始宽高比居中显示）
+        # Draw终点宝箱（按原始宽高比居中显示）
         screen.blit(chest_img, chest_rect.topleft)
 
-        # 计时器 — 使用半透明背景并且根据文字大小自动缩放（50% 透明度）
+        # 计时器 — Use semi-transparent background and auto-scale based on text size（50% 透明度）
         elapsed = (pygame.time.get_ticks() - start_ticks) // 1000
         remaining = max(0, TIMER_SECONDS - elapsed)
         m, s = divmod(remaining, 60)
@@ -729,7 +729,7 @@ def main():
         # but still need size for background
         timer_surf = font.render(timer_text, True, (255, 204, 0))
 
-        # 动态背景尺寸（左右/上下留白）
+        # 动态Background尺寸（左右/上下留白）
         pad_x, pad_y = 12, 6
         bg_w = timer_surf.get_width() + pad_x * 2
         bg_h = timer_surf.get_height() + pad_y * 2
@@ -743,13 +743,13 @@ def main():
         bg_y = 6
         screen.blit(bg_surf, (bg_x, bg_y))
 
-        # 在背景内绘制计时文字（垂直居中）
+        # Within backgroundDraw计时Text（垂直居中）
         text_x = bg_x + pad_x
         text_y = bg_y + pad_y - 1
         draw_text_with_shadow(screen, font, timer_text, (text_x, text_y), color=(255,204,0), shadow_offset=(2,2), shadow_color=(10,10,10))
 
-        # 玩家 - 根据是否移动选择不同的图片
-        # 蓝色玩家
+        # Player - 根据是否移动选择不同的图片
+        # Blue player
         if blue_anim_counter > 0:
             # 正在移动，使用动画切换
             if (blue_anim_counter // ANIM_SPEED) % 2 == 0:
@@ -760,7 +760,7 @@ def main():
             # 静止状态
             screen.blit(blue_stand_img, (int(blue_x), int(blue_y)))
         
-        # 红色玩家
+        # Red player
         if red_anim_counter > 0:
             # 正在移动，使用动画切换
             if (red_anim_counter // ANIM_SPEED) % 2 == 0:
@@ -771,7 +771,7 @@ def main():
             # 静止状态
             screen.blit(red_stand_img, (int(red_x), int(red_y)))
 
-        # 底部文字
+        # 底部Text
         info_text = "Blue: WASD   Red: Arrows   R: restart   ESC: quit"
         draw_text_with_shadow(screen, small_font, info_text, (10, HEIGHT - 26), color=(255,255,255), shadow_offset=(2,2), shadow_color=(10,10,10))
 
