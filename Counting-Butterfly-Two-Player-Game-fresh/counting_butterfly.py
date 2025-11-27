@@ -84,7 +84,7 @@ def load_sounds():
             for ext in ['mp3', 'ogg', 'wav']:
                 if os.path.exists(f"assets/audio/bgm.{ext}"):
                     pygame.mixer.music.load(f"assets/audio/bgm.{ext}")
-                    pygame.mixer.music.set_volume(0.5)
+                    pygame.mixer.music.set_volume(0.3)
                     print(f"✓ Successfully loaded background music: bgm.{ext}")
                     sounds['bgm'] = True
                     break
@@ -98,7 +98,7 @@ def load_sounds():
         for ext in ['wav', 'ogg', 'mp3']:
             if os.path.exists(f"assets/audio/countdown.{ext}"):
                 sounds['countdown'] = pygame.mixer.Sound(f"assets/audio/countdown.{ext}")
-                sounds['countdown'].set_volume(0.7)
+                sounds['countdown'].set_volume(0.5)
                 print(f"✓ Successfully loaded countdown sound: countdown.{ext}")
                 break
         if not sounds['countdown']:
@@ -111,7 +111,7 @@ def load_sounds():
         for ext in ['wav', 'ogg', 'mp3']:
             if os.path.exists(f"assets/audio/start.{ext}"):
                 sounds['start'] = pygame.mixer.Sound(f"assets/audio/start.{ext}")
-                sounds['start'].set_volume(0.8)
+                sounds['start'].set_volume(0.5)
                 print(f"✓ Successfully loaded start sound: start.{ext}")
                 break
         if not sounds['start']:
@@ -124,7 +124,7 @@ def load_sounds():
         for ext in ['wav', 'ogg', 'mp3']:
             if os.path.exists(f"assets/audio/beep.{ext}"):
                 sounds['beep'] = pygame.mixer.Sound(f"assets/audio/beep.{ext}")
-                sounds['beep'].set_volume(0.4)
+                sounds['beep'].set_volume(0.5)
                 print(f"✓ Successfully loaded keypress sound: beep.{ext}")
                 break
     except Exception as e:
@@ -135,7 +135,7 @@ def load_sounds():
         for ext in ['wav', 'ogg', 'mp3']:
             if os.path.exists(f"assets/audio/success.{ext}"):
                 sounds['success'] = pygame.mixer.Sound(f"assets/audio/success.{ext}")
-                sounds['success'].set_volume(0.6)
+                sounds['success'].set_volume(0.5)
                 print(f"✓ Successfully loaded success sound: success.{ext}")
                 break
     except Exception as e:
@@ -1161,6 +1161,10 @@ class ButterflyGame:
         # Restart hint - use more obvious color
         restart_x = SCREEN_WIDTH//2 - font_small.render("Press SPACE to play again", True, (100, 255, 100)).get_width()//2
         draw_text_with_outline(screen, "Press SPACE to play again", font_small, (100, 255, 100), restart_x, 400, (50, 50, 50), 1)
+        
+        # Exit hint
+        exit_x = SCREEN_WIDTH//2 - font_small.render("Press ESC to exit", True, (200, 200, 200)).get_width()//2
+        draw_text_with_outline(screen, "Press ESC to exit", font_small, (200, 200, 200), exit_x, 430, (50, 50, 50), 1)
         
         # Advance animation and draw players
         self.player1.animate()

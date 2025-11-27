@@ -25,16 +25,17 @@ pygame.display.set_caption("Two Player Mini Games Showdown")
 clock = pygame.time.Clock()
 FPS = 60
 
-# Color definitions
+# Color definitions - 优化为更清晰可见的颜色
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 50, 50)
 BLUE = (50, 100, 255)
 YELLOW = (255, 220, 0)
-GREEN = (50, 200, 50)
+GREEN = (100, 255, 100)  # 更亮的绿色，提高可见度
 GRAY = (128, 128, 128)
 DARK_GRAY = (50, 50, 50)
-LIGHT_GRAY = (200, 200, 200)
+LIGHT_GRAY = (220, 220, 220)  # 更亮的浅灰色
+BRIGHT_CYAN = (100, 255, 255)  # 亮青色，用于重要提示
 
 # Font settings
 try:
@@ -157,9 +158,9 @@ BACKGROUND_IMAGE = load_background()
 def load_crown_image():
     """Load crown image"""
     try:
-        crown = pygame.image.load('png/crown.png').convert_alpha()
-        # 缩放到合适大小
-        crown = pygame.transform.smoothscale(crown, (30, 24))
+        crown = pygame.image.load('CROWN.png').convert_alpha()
+        # 缩放到合适大小 (新皇冠更宽，调整比例)
+        crown = pygame.transform.smoothscale(crown, (40, 28))
         print("✓ Crown image loaded successfully!")
         return crown
     except Exception as e:
@@ -200,6 +201,38 @@ def load_player_images():
 
 # Load player images
 PLAYER_IMAGES = load_player_images()
+
+# Load audio files
+def load_audio():
+    """加载游戏启动器的音频文件"""
+    audio = {
+        'menu_bgm': None,
+        'victory': None
+    }
+    
+    try:
+        # 尝试加载主菜单BGM
+        try:
+            audio['menu_bgm'] = pygame.mixer.Sound('launcher_audio/menu_bgm.wav')
+            audio['menu_bgm'].set_volume(0.3)
+            print("✓ 主菜单BGM加载成功!")
+        except:
+            print("⚠ 未找到主菜单BGM文件")
+        
+        # 尝试加载胜利音效
+        try:
+            audio['victory'] = pygame.mixer.Sound('launcher_audio/victory.wav')
+            audio['victory'].set_volume(0.5)
+            print("✓ 胜利音效加载成功!")
+        except:
+            print("⚠ 未找到胜利音效文件")
+            
+    except Exception as e:
+        print(f"⚠ 音频加载出错: {e}")
+    
+    return audio
+
+AUDIO = load_audio()
 
 # Player animation class
 class PlayerAnimator:
@@ -411,39 +444,95 @@ class BoxRoulette:
         pygame.draw.circle(surface, WHITE, (self.center_x, self.center_y), center_size)
         pygame.draw.circle(surface, BLACK, (self.center_x, self.center_y), center_size, 3)
         
-        # Draw rotating pointer
+        # Draw rotating pointer (code-drawn arrow with smooth rendering)
         pointer_length = 60
         angle_rad = math.radians(self.pointer_angle)
         
         # Pointer end position
         end_x = self.center_x + pointer_length * math.cos(angle_rad)
-        end_y = self.center_y - pointer_length * math.sin(angle_rad)  # Note Y-axis points down
+        end_y = self.center_y - pointer_length * math.sin(angle_rad)
         
-        # Draw pointer (arrow shape)
-        # Calculate three points of arrow
-        arrow_width = 15
-        arrow_back = 10
+        # 使用抗锯齿绘制指针 - 更平滑的线条
+        # 先绘制黑色轮廓（更粗），再绘制红色主体
         
-        # Main line
+        # 绘制主线的黑色轮廓（10像素）
+        pygame.draw.line(surface, BLACK, (self.center_x, self.center_y), 
+                        (end_x, end_y), 10)
+        
+        # 绘制主线的红色部分（6像素）
         pygame.draw.line(surface, RED, (self.center_x, self.center_y), 
                         (end_x, end_y), 6)
         
-        # Arrow head
-        left_angle = angle_rad + math.radians(150)
-        right_angle = angle_rad - math.radians(150)
+        # 绘制箭头头部 - 从指针末端开始
+        arrow_length = 15
+        arrow_back = 8  # 箭头底部距离端点的距离
         
-        left_x = end_x + arrow_width * math.cos(left_angle)
-        left_y = end_y - arrow_width * math.sin(left_angle)
-        right_x = end_x + arrow_width * math.cos(right_angle)
-        right_y = end_y - arrow_width * math.sin(right_angle)
+        # 箭头尖端就是指针末端
+        tip_x = end_x
+        tip_y = end_y
         
-        arrow_points = [(end_x, end_y), (left_x, left_y), (right_x, right_y)]
-        pygame.draw.polygon(surface, RED, arrow_points)
-        pygame.draw.polygon(surface, BLACK, arrow_points, 3)
+        # 箭头底部中心点（沿着指针方向往回一点）
+        base_x = end_x - arrow_back * math.cos(angle_rad)
+        base_y = end_y + arrow_back * math.sin(angle_rad)
         
-        # Center dot
-        pygame.draw.circle(surface, YELLOW, (self.center_x, self.center_y), 8)
-        pygame.draw.circle(surface, BLACK, (self.center_x, self.center_y), 8, 2)
+        # 箭头底部的左右两个点（垂直于指针方向）
+        perp_angle = angle_rad + math.radians(90)
+        arrow_half_width = 8
+        
+        left_x = base_x + arrow_half_width * math.cos(perp_angle)
+        left_y = base_y - arrow_half_width * math.sin(perp_angle)
+        
+        right_x = base_x - arrow_half_width * math.cos(perp_angle)
+        right_y = base_y + arrow_half_width * math.sin(perp_angle)
+        
+        # 箭头主体坐标（尖端 + 左下 + 右下）
+        arrow_points = [(int(tip_x), int(tip_y)), 
+                       (int(left_x), int(left_y)), 
+                       (int(right_x), int(right_y))]
+        
+        # 箭头轮廓坐标（稍微放大）
+        outline_margin = 2
+        # 尖端稍微延长
+        outline_tip_x = tip_x + outline_margin * math.cos(angle_rad)
+        outline_tip_y = tip_y - outline_margin * math.sin(angle_rad)
+        # 底部稍微加宽
+        outline_left_x = left_x + (outline_margin + 1) * math.cos(perp_angle)
+        outline_left_y = left_y - (outline_margin + 1) * math.sin(perp_angle)
+        outline_right_x = right_x - (outline_margin + 1) * math.cos(perp_angle)
+        outline_right_y = right_y + (outline_margin + 1) * math.sin(perp_angle)
+        
+        outline_points = [
+            (int(outline_tip_x), int(outline_tip_y)),
+            (int(outline_left_x), int(outline_left_y)),
+            (int(outline_right_x), int(outline_right_y))
+        ]
+        
+        # 使用gfxdraw绘制抗锯齿箭头
+        try:
+            # 先绘制黑色轮廓（稍大）
+            pygame.gfxdraw.filled_polygon(surface, outline_points, BLACK)
+            pygame.gfxdraw.aapolygon(surface, outline_points, BLACK)
+            
+            # 再绘制红色箭头主体
+            pygame.gfxdraw.filled_polygon(surface, arrow_points, RED)
+            pygame.gfxdraw.aapolygon(surface, arrow_points, RED)
+        except:
+            # 降级方案
+            pygame.draw.polygon(surface, BLACK, outline_points, 0)
+            pygame.draw.polygon(surface, RED, arrow_points, 0)
+        
+        # Center dot (黑色轮廓 + 黄色中心)
+        try:
+            # 黑色外圈
+            pygame.gfxdraw.filled_circle(surface, self.center_x, self.center_y, 10, BLACK)
+            pygame.gfxdraw.aacircle(surface, self.center_x, self.center_y, 10, BLACK)
+            # 黄色内圈
+            pygame.gfxdraw.filled_circle(surface, self.center_x, self.center_y, 8, YELLOW)
+            pygame.gfxdraw.aacircle(surface, self.center_x, self.center_y, 8, YELLOW)
+        except:
+            # 降级方案
+            pygame.draw.circle(surface, BLACK, (self.center_x, self.center_y), 10)
+            pygame.draw.circle(surface, YELLOW, (self.center_x, self.center_y), 8)
 
 # Winner input
 def manual_winner_input(game_name):
@@ -644,6 +733,20 @@ def main():
     selected_game_index = None
     spin_complete_time = 0
     
+    # 游戏名称放大动画参数
+    game_name_scale = 0.0  # 当前缩放比例
+    game_name_animation_duration = 800  # 动画持续时间(毫秒)
+    
+    # 音乐播放状态
+    menu_bgm_playing = False
+    victory_sound_played = False
+    
+    # 播放主菜单BGM
+    if AUDIO['menu_bgm']:
+        AUDIO['menu_bgm'].play(loops=-1)  # 无限循环
+        menu_bgm_playing = True
+        print("🎵 开始播放主菜单BGM")
+    
     running = True
     while running:
         clock.tick(FPS)
@@ -688,6 +791,13 @@ def main():
         blue_player.update()
         red_player.update()
         
+        # Update游戏名称缩放动画
+        if state == "WAITING" and game_name_scale < 1.0:
+            elapsed = pygame.time.get_ticks() - spin_complete_time
+            progress = min(elapsed / game_name_animation_duration, 1.0)
+            # 使用缓动函数使动画更流畅
+            game_name_scale = 1 - (1 - progress) ** 3  # ease-out cubic
+        
         if state == "SPINNING":
             if roulette.update():  # Rotation complete
                 print(f"Rotation complete, selected game index: {selected_game_index}")
@@ -699,9 +809,17 @@ def main():
                     print("✓ OK: Pointer stopped at an available game")
                 state = "WAITING"
                 spin_complete_time = pygame.time.get_ticks()
+                game_name_scale = 0.0  # 重置缩放动画
         
         elif state == "PLAYING":
             print(f"Entering PLAYING state, selected_game_index = {selected_game_index}")
+            
+            # 停止主菜单BGM
+            if menu_bgm_playing and AUDIO['menu_bgm']:
+                AUDIO['menu_bgm'].stop()
+                menu_bgm_playing = False
+                print("🔇 停止主菜单BGM")
+            
             # Launch selected game
             if selected_game_index is not None:
                 print(f"Launching game: {GAMES[selected_game_index]['display_name']}")
@@ -721,9 +839,17 @@ def main():
                 if all(g["played"] for g in GAMES):
                     print("All games completed, entering FINAL state")
                     state = "FINAL"
+                    victory_sound_played = False  # 重置胜利音效标志
                 else:
                     print("Games remaining, returning to MENU state")
                     state = "MENU"
+                    
+                    # 恢复主菜单BGM
+                    if not menu_bgm_playing and AUDIO['menu_bgm']:
+                        AUDIO['menu_bgm'].play(loops=-1)
+                        menu_bgm_playing = True
+                        print("🎵 恢复播放主菜单BGM")
+                    
                     # Ensure menu interface is redrawn
                     pygame.display.flip()
         
@@ -773,34 +899,79 @@ def main():
                     print("[WARNING] CROWN_IMAGE is None!")
                     main._no_crown_warning = True
             
-            # Draw分数
+            # Draw分数 - 移到更高位置避免与玩家重叠
             score_text = font_medium.render(
                 f"P1: {score_manager.player1_score}  P2: {score_manager.player2_score}",
                 True, WHITE
             )
-            score_rect = score_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 60))
+            score_rect = score_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 100))
             screen.blit(score_text, score_rect)
             
-            # Draw提示
+            # Draw提示 - 优化布局和间距
             if state == "MENU":
-                hint = font_small.render("Press SPACE to Spin", True, GREEN)
-                hint_rect = hint.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 30))
+                # 主菜单提示 - 简洁明了
+                hint = font_small.render("Press SPACE to Spin", True, BRIGHT_CYAN)
+                hint_rect = hint.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 70))
                 screen.blit(hint, hint_rect)
+                
+                # 添加控制说明 - 使用更亮的颜色
+                controls = font_small.render("P1: WASD  |  P2: Arrow Keys", True, LIGHT_GRAY)
+                controls_rect = controls.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 45))
+                screen.blit(controls, controls_rect)
+                
             elif state == "WAITING":
                 if selected_game_index is not None:
                     game_name = GAMES[selected_game_index]["display_name"]
-                    selected_text = font_medium.render(f"Press ENTER to Start: {game_name}", True, YELLOW)
-                    selected_rect = selected_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 90))
-                    screen.blit(selected_text, selected_rect)
                     
-                    # Emphasis: Press ENTER key (not SPACE key)
-                    hint1 = font_small.render("Press ENTER (Return Key)", True, GREEN)
-                    hint1_rect = hint1.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 50))
-                    screen.blit(hint1, hint1_rect)
+                    # 游戏名称放大动画 - 从小到大出现在屏幕中央
+                    if game_name_scale > 0:
+                        # 创建更大的字体用于放大效果
+                        max_font_size = 40  # 最大字号（从48调整为40）
+                        current_font_size = int(max_font_size * game_name_scale)
+                        
+                        if current_font_size > 0:
+                            try:
+                                # 使用粗体效果 - 通过重复渲染实现
+                                zoom_font = pygame.font.Font(
+                                    "Counting-Butterfly-Two-Player-Game-fresh/assets/fonts/PressStart2P-Regular.ttf", 
+                                    current_font_size
+                                )
+                            except:
+                                zoom_font = pygame.font.Font(None, int(current_font_size * 1.5))
+                            
+                            # 渲染游戏名称
+                            name_surface = zoom_font.render(game_name, True, YELLOW)
+                            
+                            # 加粗效果：在原位置周围多次渲染
+                            name_rect = name_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 30))
+                            
+                            # 绘制阴影效果（深色轮廓）
+                            shadow_surface = zoom_font.render(game_name, True, (50, 50, 50))
+                            for offset in [(2, 2), (-2, 2), (2, -2), (-2, -2)]:
+                                shadow_rect = shadow_surface.get_rect(
+                                    center=(SCREEN_WIDTH // 2 + offset[0], SCREEN_HEIGHT // 2 - 30 + offset[1])
+                                )
+                                screen.blit(shadow_surface, shadow_rect)
+                            
+                            # 绘制加粗效果（多层叠加）
+                            for offset in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+                                bold_rect = name_surface.get_rect(
+                                    center=(SCREEN_WIDTH // 2 + offset[0], SCREEN_HEIGHT // 2 - 30 + offset[1])
+                                )
+                                screen.blit(name_surface, bold_rect)
+                            
+                            # 最后绘制主文字
+                            screen.blit(name_surface, name_rect)
                     
-                    hint2 = font_small.render("to Start the Game", True, GREEN)
-                    hint2_rect = hint2.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 30))
-                    screen.blit(hint2, hint2_rect)
+                    # 开始提示 - 合并为一行，更简洁，使用亮青色
+                    hint = font_small.render("Press ENTER to Start", True, BRIGHT_CYAN)
+                    hint_rect = hint.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 70))
+                    screen.blit(hint, hint_rect)
+                    
+                    # 控制说明 - 使用更亮的颜色
+                    controls = font_small.render("P1: WASD  |  P2: Arrow Keys", True, LIGHT_GRAY)
+                    controls_rect = controls.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 45))
+                    screen.blit(controls, controls_rect)
                 else:
                     # If no game selected, return to menu
                     state = "MENU"
@@ -818,6 +989,18 @@ def main():
             red_player.draw(screen)
         
         elif state == "FINAL":
+            # 停止主菜单BGM（如果还在播放）
+            if menu_bgm_playing and AUDIO['menu_bgm']:
+                AUDIO['menu_bgm'].stop()
+                menu_bgm_playing = False
+                print("🔇 停止主菜单BGM（最终界面）")
+            
+            # 播放胜利音效（只播放一次）
+            if not victory_sound_played and AUDIO['victory']:
+                AUDIO['victory'].play()
+                victory_sound_played = True
+                print("🏆 播放胜利音效")
+            
             # Final score screen - like main menu but with winner celebration
             # Draw background (same as main menu)
             if BACKGROUND_IMAGE:
@@ -862,7 +1045,8 @@ def main():
                     if loser_img:
                         screen.blit(loser_img, (SCREEN_WIDTH - 100, SCREEN_HEIGHT - 100))
                     
-                    result_text = font_large.render("PLAYER 1 WIN!", True, (100, 150, 255))
+                    # 使用更鲜艳的蓝色
+                    result_text = font_large.render("PLAYER 1 WIN!", True, (120, 200, 255))
                     
                 else:
                     # Player 2 wins - enlarge red player
@@ -885,23 +1069,24 @@ def main():
                     if loser_img:
                         screen.blit(loser_img, (50, SCREEN_HEIGHT - 100))
                     
-                    result_text = font_large.render("PLAYER 2 WIN!", True, (255, 100, 100))
+                    # 使用更鲜艳的红色
+                    result_text = font_large.render("PLAYER 2 WIN!", True, (255, 120, 120))
                 
                 # Draw winner text at top
                 result_rect = result_text.get_rect(center=(SCREEN_WIDTH // 2, 60))
                 screen.blit(result_text, result_rect)
             
-            # Display final score at bottom
+            # Display final score at bottom - 优化布局
             score_text = font_medium.render(
                 f"Final Score - P1: {score_manager.player1_score}  P2: {score_manager.player2_score}",
                 True, YELLOW
             )
-            score_rect = score_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 80))
+            score_rect = score_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 90))
             screen.blit(score_text, score_rect)
             
-            # Exit hint
-            hint = font_small.render("Press ESC to Exit", True, WHITE)
-            hint_rect = hint.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 40))
+            # Exit hint - 使用亮青色增加可见度
+            hint = font_small.render("Press ESC to Exit", True, BRIGHT_CYAN)
+            hint_rect = hint.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 55))
             screen.blit(hint, hint_rect)
             
             # Check exit

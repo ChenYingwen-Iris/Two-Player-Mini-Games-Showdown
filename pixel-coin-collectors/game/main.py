@@ -110,11 +110,11 @@ try:
         countdown_sounds[2] = pygame.mixer.Sound(asset_path("assets/audio/count2.wav"))
         countdown_sounds[1] = pygame.mixer.Sound(asset_path("assets/audio/count1.wav"))
         for s in countdown_sounds.values():
-            s.set_volume(0.9)
+            s.set_volume(0.5)
     except (pygame.error, FileNotFoundError):
         try:
             single = pygame.mixer.Sound(asset_path("assets/audio/countdown.wav"))
-            single.set_volume(0.9)
+            single.set_volume(0.5)
             countdown_sounds = {3: single, 2: single, 1: single}
         except (pygame.error, FileNotFoundError):
             countdown_sounds = {}
@@ -122,19 +122,19 @@ try:
     # bomb hit sound
     try:
         bomb_sound = pygame.mixer.Sound(asset_path("assets/audio/bomb.wav"))
-        bomb_sound.set_volume(0.9)
+        bomb_sound.set_volume(0.5)
     except (pygame.error, FileNotFoundError):
         bomb_sound = None
 
     # diamond collect sound
     try:
         diamond_sound = pygame.mixer.Sound(asset_path("assets/audio/diamond.wav"))
-        diamond_sound.set_volume(0.9)
+        diamond_sound.set_volume(0.5)
     except (pygame.error, FileNotFoundError):
         diamond_sound = None
 
-    bgm.set_volume(0.5)
-    coin_sound.set_volume(0.8)
+    bgm.set_volume(0.3)
+    coin_sound.set_volume(0.5)
 except (pygame.error, FileNotFoundError) as e:
     print(f"Warning: some audio resources failed to load: {e}")
     # Ensure sound variables exist to avoid NameError later
@@ -549,7 +549,8 @@ def main():
                 font.render(f"P1: {p1_score}", True, P1_COLOR),
                 font.render(f"P2: {p2_score}", True, P2_COLOR),
                 font.render(result, True, RESULT_COLOR),
-                font.render("PRESS R TO RESTART", True, RESTART_COLOR)
+                font.render("PRESS R TO RESTART", True, RESTART_COLOR),
+                font.render("Press ESC to exit", True, (200, 200, 200))
             ]
             # 居中显示文字
             for i, text in enumerate(texts):

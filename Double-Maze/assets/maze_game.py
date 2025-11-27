@@ -348,7 +348,7 @@ def main():
                         # load as a Sound object (WAV/PCM) to avoid backend mp3 decoder errors
                         try:
                             s = pygame.mixer.Sound(mp)
-                            s.set_volume(0.5)
+                            s.set_volume(0.3)
                             ch = s.play(loops=-1)
                             maze_music_sound = s
                             maze_music_channel = ch
@@ -362,7 +362,7 @@ def main():
                     # fallback: try to load via music (MP3/OGG)
                     try:
                         pygame.mixer.music.load(mp)
-                        pygame.mixer.music.set_volume(0.5)
+                        pygame.mixer.music.set_volume(0.3)
                         pygame.mixer.music.play(-1)
                         maze_music_using_sound = False
                         print(f"[music] maze music playing {mp}")

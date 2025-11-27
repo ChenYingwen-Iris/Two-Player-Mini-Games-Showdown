@@ -30,8 +30,8 @@ def main():
     explosion_sound = load_sound("explosion.wav")  # Load explosion sound
 
     # per-track target volumes (0.0 .. 1.0)
-    menu_volume = 0.4
-    gameplay_volume = 0.6
+    menu_volume = 0.3
+    gameplay_volume = 0.3
 
     try:
         if menu_music:
@@ -43,15 +43,15 @@ def main():
         pass
 
     if pull_sound:
-        pull_sound.set_volume(0.6)
+        pull_sound.set_volume(0.5)
     if win_sound:
-        win_sound.set_volume(0.7)
+        win_sound.set_volume(0.5)
     if select_sound:
-        select_sound.set_volume(1.0)
+        select_sound.set_volume(0.5)
     if clone_sound:
-        clone_sound.set_volume(1.0)
+        clone_sound.set_volume(0.5)
     if explosion_sound:
-        explosion_sound.set_volume(1.0)
+        explosion_sound.set_volume(0.5)
 
     game = Game(screen, WIDTH, HEIGHT, ai=True)
     game.pull_sound = pull_sound
